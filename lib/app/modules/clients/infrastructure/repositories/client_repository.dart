@@ -47,9 +47,9 @@ class ClientRepositoryImpl implements ClientRepository {
   @override
   Future<Either<Failure, Unit>> delete(Client entity) async {
     var connectivityResult = await _connectivity.checkConnectivity();
+    var dto = ClientDto.fromDomain(entity);
 
     if (connectivityResult == ConnectivityResult.none) {
-      var dto = ClientDto.fromDomain(entity);
       dto.isDeleted = true;
       await _localClientDataSource.update(dto);
 
@@ -57,9 +57,8 @@ class ClientRepositoryImpl implements ClientRepository {
     } else {
       try {
         await _remoteClientDataSource.delete(entity.id!);
-        var result = await _localClientDataSource.get(entity.id!);
-        if (result != null) {
-          await _localClientDataSource.delete(result);
+        if (await _localClientDataSource.exists(dto)) {
+          await _localClientDataSource.delete(dto);
           return right(unit);
         } else {
           return left(const ApiFailure(code: 404, message: "Not found"));
@@ -96,12 +95,6 @@ class ClientRepositoryImpl implements ClientRepository {
   Future<Either<Failure, List<Client>>> getAll() async {
     var connectivityResult = await _connectivity.checkConnectivity();
 
-    var test = await _localClientDataSource.getAll();
-
-    for (var item in test) {
-      print("GET ALL: ${item.toJson()}");
-    }
-
     if (connectivityResult == ConnectivityResult.none) {
       var result = await _localClientDataSource.getAll();
 
@@ -113,7 +106,11 @@ class ClientRepositoryImpl implements ClientRepository {
         var apiResponse = await _remoteClientDataSource.getAll();
 
         for (var i in apiResponse) {
-          await _localClientDataSource.create(i);
+          if (await _localClientDataSource.exists(i)) {
+            await _localClientDataSource.update(i);
+          } else {
+            await _localClientDataSource.create(i);
+          }
         }
 
         return right(apiResponse.map((e) => e.toDomain()).toList());
@@ -135,17 +132,19 @@ class ClientRepositoryImpl implements ClientRepository {
         var localResponse = await _localClientDataSource.getAll();
 
         for (var l in localResponse) {
-          if (l.id == null) {
-            await _remoteClientDataSource.create(l);
-          } else {
-            if (l.isDeleted == null || l.isDeleted == false) {
+          if (l.isDeleted) {
+            if (l.id != null) {
               await _remoteClientDataSource.delete(l.id!);
+            }
+            await _localClientDataSource.delete(l);
+          } else {
+            if (l.id == null) {
+              await _remoteClientDataSource.create(l);
             } else {
               await _remoteClientDataSource.update(l);
             }
+            await _localClientDataSource.delete(l);
           }
-
-          await _localClientDataSource.delete(l);
         }
 
         return right(unit);

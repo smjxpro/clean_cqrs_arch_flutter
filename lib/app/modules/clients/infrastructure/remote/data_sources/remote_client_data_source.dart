@@ -126,7 +126,6 @@ class RemoteClientDataSourceImpl implements RemoteClientDataSource {
 
   @override
   Future<void> update(ClientDto entity) async {
-    print("UPDATE: ${entity.toJson()}");
     try {
       var headers = {'Content-Type': 'application/json'};
       var request =

@@ -10,4 +10,6 @@ abstract class GenericLocalSource<T> {
   Future<void> delete(T entity);
 
   Future<void> deleteAll();
+
+  Future<bool> exists(T entity);
 }

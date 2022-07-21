@@ -4,10 +4,12 @@ class Client {
     required this.name,
     this.imageUrl,
     this.localId,
+    this.isDeleted = false,
   });
 
   String? id;
   String name;
   String? imageUrl;
-  String? localId;
+  int? localId;
+  bool isDeleted;
 }

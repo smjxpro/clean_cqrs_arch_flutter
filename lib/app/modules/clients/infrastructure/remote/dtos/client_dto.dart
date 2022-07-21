@@ -8,14 +8,14 @@ class ClientDto {
     required this.name,
     this.imageUrl,
     this.localId,
-    this.isDeleted,
+    this.isDeleted = false,
   });
 
   String? id;
   String name;
   String? imageUrl;
-  String? localId;
-  bool? isDeleted;
+  int? localId;
+  bool isDeleted;
 
   factory ClientDto.fromJson(String str) => ClientDto.fromMap(json.decode(str));
 
@@ -43,6 +43,7 @@ class ClientDto {
       name: name,
       imageUrl: imageUrl,
       localId: localId,
+      isDeleted: isDeleted,
     );
   }
 
@@ -52,6 +53,7 @@ class ClientDto {
       name: client.name,
       imageUrl: client.imageUrl,
       localId: client.localId,
+      isDeleted: client.isDeleted,
     );
   }
 }
