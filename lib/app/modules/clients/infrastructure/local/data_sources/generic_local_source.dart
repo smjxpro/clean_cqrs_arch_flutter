@@ -1,5 +1,7 @@
 abstract class GenericLocalSource<T> {
-  Future<T?> get(String id);
+  Future<T?> get(int id);
+
+  Future<T?> getByRemoteId(String id);
 
   Future<List<T>> getAll();
 
@@ -7,9 +9,7 @@ abstract class GenericLocalSource<T> {
 
   Future<T> update(T entity);
 
-  Future<void> delete(T entity);
+  Future<void> delete(int id);
 
   Future<void> deleteAll();
-
-  Future<bool> exists(T entity);
 }

@@ -24,11 +24,11 @@ class LocalClientDataSourceImpl implements LocalClientDataSource {
   }
 
   @override
-  Future<void> delete(ClientDto entity) async {
+  Future<void> delete(int id) async {
     Database db = await dbFactory.openDatabase(clientDbPath);
     var store = StoreRef<int, String>.main();
 
-    var finder = Finder(filter: Filter.byKey(entity.localId));
+    var finder = Finder(filter: Filter.byKey(id));
     await store.delete(db, finder: finder);
   }
 
@@ -41,15 +41,13 @@ class LocalClientDataSourceImpl implements LocalClientDataSource {
   }
 
   @override
-  Future<ClientDto?> get(String id) async {
-    var clients = await getAll();
+  Future<ClientDto?> get(int id) async {
+    Database db = await dbFactory.openDatabase(clientDbPath);
+    var store = StoreRef<int, String>.main();
 
-    var result = clients.firstWhereOrNull((element) => element.id == id);
-    if (result != null) {
-      return result;
-    } else {
-      return null;
-    }
+    var finder = Finder(filter: Filter.byKey(id));
+    var record = await store.findFirst(db, finder: finder);
+    return record != null ? ClientDto.fromJson(record.value) : null;
   }
 
   @override
@@ -78,8 +76,19 @@ class LocalClientDataSourceImpl implements LocalClientDataSource {
   }
 
   @override
-  Future<bool> exists(ClientDto entity) async {
-    var result = await get(entity.id!);
-    return result != null;
+  Future<bool> exists(int id) async {
+    Database db = await dbFactory.openDatabase(clientDbPath);
+    var store = StoreRef<int, String>.main();
+
+    var finder = Finder(filter: Filter.byKey(id));
+    var record = await store.findFirst(db, finder: finder);
+    return record != null;
+  }
+
+  @override
+  Future<ClientDto?> getByRemoteId(String id) async {
+    var clients = await getAll();
+
+    return clients.firstWhereOrNull((e) => e.id == id);
   }
 }

@@ -56,9 +56,10 @@ class ClientRepositoryImpl implements ClientRepository {
       return right(unit);
     } else {
       try {
-        await _remoteClientDataSource.delete(entity.id!);
-        if (await _localClientDataSource.exists(dto)) {
-          await _localClientDataSource.delete(dto);
+        await _remoteClientDataSource.delete(dto.id!);
+        var result = await _localClientDataSource.get(dto.localId!);
+        if (result != null) {
+          await _localClientDataSource.delete(dto.localId!);
           return right(unit);
         } else {
           return left(const ApiFailure(code: 404, message: "Not found"));
@@ -74,7 +75,7 @@ class ClientRepositoryImpl implements ClientRepository {
     var connectivityResult = await _connectivity.checkConnectivity();
 
     if (connectivityResult == ConnectivityResult.none) {
-      var result = await _localClientDataSource.get(id);
+      var result = await _localClientDataSource.getByRemoteId(id);
       if (result != null) {
         return right(result.toDomain());
       } else {
@@ -83,7 +84,13 @@ class ClientRepositoryImpl implements ClientRepository {
     } else {
       try {
         var apiResponse = await _remoteClientDataSource.get(id);
-        await _localClientDataSource.create(apiResponse);
+
+        var l = await _localClientDataSource.getByRemoteId(id);
+        if (l != null) {
+          await _localClientDataSource.create(apiResponse);
+        } else {
+          await _localClientDataSource.update(apiResponse);
+        }
         return right(apiResponse.toDomain());
       } on ApiException catch (e) {
         return left(ApiFailure(code: e.code, message: e.message));
@@ -106,7 +113,8 @@ class ClientRepositoryImpl implements ClientRepository {
         var apiResponse = await _remoteClientDataSource.getAll();
 
         for (var i in apiResponse) {
-          if (await _localClientDataSource.exists(i)) {
+          var dto = await _localClientDataSource.getByRemoteId(i.id!);
+          if (dto != null) {
             await _localClientDataSource.update(i);
           } else {
             await _localClientDataSource.create(i);
@@ -136,14 +144,14 @@ class ClientRepositoryImpl implements ClientRepository {
             if (l.id != null) {
               await _remoteClientDataSource.delete(l.id!);
             }
-            await _localClientDataSource.delete(l);
+            await _localClientDataSource.delete(l.localId!);
           } else {
             if (l.id == null) {
               await _remoteClientDataSource.create(l);
             } else {
               await _remoteClientDataSource.update(l);
             }
-            await _localClientDataSource.delete(l);
+            await _localClientDataSource.delete(l.localId!);
           }
         }
 
