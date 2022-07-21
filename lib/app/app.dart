@@ -1,6 +1,7 @@
-import 'package:clean_cqrs_arch_flutter/app/modules/simple_todo/presentation/views/pages/todo_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'modules/clients/presentation/views/pages/client_list_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: TodoListPage(),
+      home: ClientPage(),
     );
   }
 }

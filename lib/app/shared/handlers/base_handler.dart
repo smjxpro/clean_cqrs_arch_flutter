@@ -1,3 +1,3 @@
-abstract class Handler<R, T> {
+abstract class BaseHandler<R, T> {
   Future<T> handle(R request);
 }
